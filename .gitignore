@@ -1,0 +1,114 @@
+# Neovim Configuration .gitignore
+
+# Plugin management files
+lazy-lock.json
+packer_compiled.lua
+
+# Log files
+*.log
+logs/
+dap.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Session files
+Session.vim
+.session
+*.session
+
+# Undo files
+.undodir/
+*.un~
+
+# Spell files
+*.spl
+*.sug
+
+# View files
+*.vimview
+
+# Cache and data directories
+.cache/
+.local/
+data/
+state/
+cache/
+
+# Debug and testing files
+debug_test.py
+simple_test.py
+test_*.py
+*_test.py
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Windows
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Backup files
+*.bak
+*.backup
+backup/
+
+# LSP and diagnostic files
+.null-ls_*
+.luarc.json
+.stylua.toml
+
+# Mason tool installations (if using mason)
+mason/
+mason.nvim/
+
+# Lazy.nvim plugin directory
+lazy/
+
+# Any custom local configuration
+local_config.lua
+personal.lua
+private.lua
+
+# Python cache (in case Python scripts are used)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+
+# Temporary debug scripts
+debug*.py
+test*.py
+example*.py
