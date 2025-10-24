@@ -49,6 +49,7 @@ return {
 		require("configurations.debug.dotnet").setup(dap, dapui)
 		require("configurations.debug.rust").setup(dap, dapui)
 		require("configurations.debug.python").setup(dap, dapui)
+		require("configurations.debug.java").setup(dap, dapui)
 		require("configurations.debug.shared").setup(dap, dapui)
 
 		-- Auto-open/close DAP UI

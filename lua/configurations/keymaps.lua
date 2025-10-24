@@ -60,19 +60,347 @@ function M.setup()
 		desc = "Split horizontal",
 	})
 
-	-- Thoát
-	map("n", "<leader>q", ":q<CR>")
-	map("n", "<leader>Q", ":qa!<CR>")
+	-- Buffer and window management
+	map("n", "<leader>q", ":bd<CR>", {
+		desc = "Close current buffer",
+	})
+	map("n", "<leader>Q", ":qa!<CR>", {
+		desc = "Force quit all",
+	})
 
+	-- Additional buffer navigation
+	map("n", "<leader>bn", ":bnext<CR>", {
+		desc = "Next buffer",
+	})
+	map("n", "<leader>bp", ":bprevious<CR>", {
+		desc = "Previous buffer",
+	})
+	map("n", "<leader>bd", ":bd<CR>", {
+		desc = "Delete buffer",
+	})
+	map("n", "<leader>ba", ":%bd|e#<CR>", {
+		desc = "Close all buffers except current",
+	})
+
+	-- Error/Diagnostic Navigation (using <leader>e and <leader>p)
+	map("n", "<leader>e", function()
+		vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+	end, {
+		desc = "Jump to next error",
+	})
+	map("n", "<leader>p", function()
+		vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+	end, {
+		desc = "Jump to previous error",
+	})
+
+	-- All diagnostics (errors + warnings)
 	map("n", "<leader>ne", function()
 		vim.diagnostic.goto_next()
 	end, {
-		desc = "Next diagnostic",
+		desc = "Next diagnostic (all)",
 	})
 	map("n", "<leader>pe", function()
 		vim.diagnostic.goto_prev()
 	end, {
-		desc = "Previous diagnostic",
+		desc = "Previous diagnostic (all)",
+	})
+
+	-- Show diagnostic information
+	map("n", "<leader>ed", vim.diagnostic.open_float, {
+		desc = "Show line diagnostics",
+	})
+	map("n", "<leader>dl", vim.diagnostic.setloclist, {
+		desc = "Show diagnostics list",
+	})
+	map("n", "<leader>dy", function()
+		local diagnostics = vim.diagnostic.get(0, { 
+			lnum = vim.fn.line(".") - 1,
+			severity = vim.diagnostic.severity.ERROR
+		})
+		if #diagnostics > 0 then
+			local message = diagnostics[1].message
+			vim.fn.setreg("+", message)
+			-- Silent copy, no notification
+		else
+			vim.notify("No warning diagnostic at cursor position", vim.log.levels.WARN)
+		end
+	end, {
+		desc = "Copy warning diagnostic message to clipboard",
+	})
+
+	-- Fix delete operations to not overwrite clipboard
+	map("n", "x", '"_x', {
+		desc = "Delete character without affecting clipboard",
+	})
+	map("n", "X", '"_X', {
+		desc = "Delete character backwards without affecting clipboard",
+	})
+	map("n", "dd", '"_dd', {
+		desc = "Delete line without affecting clipboard",
+	})
+	map("n", "D", '"_D', {
+		desc = "Delete to end of line without affecting clipboard",
+	})
+	map("v", "d", '"_d', {
+		desc = "Delete selection without affecting clipboard",
+	})
+	map("n", "c", '"_c', {
+		desc = "Change without affecting clipboard",
+	})
+	map("v", "c", '"_c', {
+		desc = "Change selection without affecting clipboard",
+	})
+	map("n", "C", '"_C', {
+		desc = "Change to end of line without affecting clipboard",
+	})
+	map("n", "s", '"_s', {
+		desc = "Substitute without affecting clipboard",
+	})
+	map("n", "S", '"_S', {
+		desc = "Substitute line without affecting clipboard",
+	})
+
+	-- Keep a leader mapping for intentional delete to clipboard
+	map("n", "<leader>dd", "dd", {
+		desc = "Delete line to clipboard",
+	})
+	map("v", "<leader>d", "d", {
+		desc = "Delete selection to clipboard",
+	})
+
+	-- Paste without losing clipboard
+	map("n", "p", '"0p', {
+		desc = "Paste from yank register (preserves clipboard)",
+	})
+	map("n", "P", '"0P', {
+		desc = "Paste before from yank register (preserves clipboard)",
+	})
+
+	-- Paste in visual mode without losing clipboard
+	map("v", "p", '"0p', {
+		desc = "Paste from yank register in visual mode (preserves clipboard)",
+	})
+	map("v", "P", '"0P', {
+		desc = "Paste before from yank register in visual mode (preserves clipboard)",
+	})
+
+	-- Rust specific keymaps
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "rust",
+		callback = function()
+			-- Check Rust code
+			map("n", "<leader>rc", function()
+				vim.cmd("write")
+				vim.cmd("!cargo check")
+			end, {
+				desc = "Cargo check",
+				buffer = true,
+			})
+
+			-- Build Rust project
+			map("n", "<leader>rb", function()
+				vim.cmd("write")
+				vim.cmd("!cargo build")
+			end, {
+				desc = "Cargo build",
+				buffer = true,
+			})
+
+			-- Run Rust project
+			map("n", "<leader>rr", function()
+				vim.cmd("write")
+				vim.cmd("!cargo run")
+			end, {
+				desc = "Cargo run",
+				buffer = true,
+			})
+
+			-- Test Rust project
+			map("n", "<leader>rt", function()
+				vim.cmd("write")
+				vim.cmd("!cargo test")
+			end, {
+				desc = "Cargo test",
+				buffer = true,
+			})
+
+			-- Format current Rust file
+			map("n", "<leader>rf", function()
+				vim.cmd("write")
+				vim.cmd("Format")
+			end, {
+				desc = "Format Rust file",
+				buffer = true,
+			})
+
+			-- Comment toggle with Ctrl+/ for Rust
+			local function toggle_rust_comment()
+				local line = vim.api.nvim_get_current_line()
+				local cursor_pos = vim.api.nvim_win_get_cursor(0)
+
+				if line:match("^%s*//") then
+					-- Uncomment: remove first occurrence of //
+					local new_line = line:gsub("^(%s*)// ?", "%1")
+					vim.api.nvim_set_current_line(new_line)
+				else
+					-- Comment: add // at the beginning (preserving indentation)
+					local indent = line:match("^(%s*)")
+					local content = line:gsub("^%s*", "")
+					local new_line = indent .. "// " .. content
+					vim.api.nvim_set_current_line(new_line)
+				end
+
+				-- Restore cursor position
+				vim.api.nvim_win_set_cursor(0, cursor_pos)
+			end
+
+			local function toggle_rust_comment_visual()
+				local start_line = vim.fn.line("'<")
+				local end_line = vim.fn.line("'>")
+
+				-- Check if all lines are commented
+				local all_commented = true
+				for i = start_line, end_line do
+					local line = vim.fn.getline(i)
+					if not line:match("^%s*//") and line:match("%S") then
+						all_commented = false
+						break
+					end
+				end
+
+				-- Toggle comments for selected lines
+				for i = start_line, end_line do
+					local line = vim.fn.getline(i)
+					if all_commented then
+						-- Uncomment
+						local new_line = line:gsub("^(%s*)// ?", "%1")
+						vim.fn.setline(i, new_line)
+					else
+						-- Comment (only if line has content)
+						if line:match("%S") then
+							local indent = line:match("^(%s*)")
+							local content = line:gsub("^%s*", "")
+							local new_line = indent .. "// " .. content
+							vim.fn.setline(i, new_line)
+						end
+					end
+				end
+			end
+
+			-- Ctrl+/ in normal mode - toggle comment on current line
+			map("n", "<C-/>", toggle_rust_comment, {
+				desc = "Toggle Rust comment on current line",
+				buffer = true,
+			})
+
+			-- Ctrl+/ in visual mode - toggle comment on selected lines
+			map("v", "<C-/>", function()
+				toggle_rust_comment_visual()
+				-- Clear selection and return to normal mode
+				vim.cmd("normal! ")
+			end, {
+				desc = "Toggle Rust comment on selected lines",
+				buffer = true,
+			})
+
+			-- Alternative mapping for terminals that don't support Ctrl+/
+			map("n", "<leader>/", toggle_rust_comment, {
+				desc = "Toggle Rust comment on current line (alternative)",
+				buffer = true,
+			})
+
+			map("v", "<leader>/", function()
+				toggle_rust_comment_visual()
+				vim.cmd("normal! ")
+			end, {
+				desc = "Toggle Rust comment on selected lines (alternative)",
+				buffer = true,
+			})
+		end,
+	})
+
+	-- Java specific keymaps
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "java",
+		callback = function()
+			-- Compile current Java file
+			map("n", "<leader>jc", function()
+				local filename = vim.fn.expand("%:p")
+				local classname = vim.fn.expand("%:t:r")
+				local cmd = string.format("javac %s", filename)
+				vim.cmd("write")
+				vim.fn.system(cmd)
+				if vim.v.shell_error == 0 then
+					vim.notify("✓ Java compilation successful", vim.log.levels.INFO)
+				else
+					vim.notify("✗ Java compilation failed", vim.log.levels.ERROR)
+				end
+			end, {
+				desc = "Compile Java file",
+				buffer = true,
+			})
+
+			-- Run current Java file
+			map("n", "<leader>jr", function()
+				local classname = vim.fn.expand("%:t:r")
+				local dir = vim.fn.expand("%:p:h")
+				vim.cmd("write")
+				-- Compile first
+				local compile_cmd = string.format("javac %s", vim.fn.expand("%:p"))
+				vim.fn.system(compile_cmd)
+				if vim.v.shell_error == 0 then
+					-- Then run
+					local run_cmd = string.format("cd %s && java %s", dir, classname)
+					vim.cmd("!" .. run_cmd)
+				else
+					vim.notify("✗ Compilation failed, cannot run", vim.log.levels.ERROR)
+				end
+			end, {
+				desc = "Compile and run Java file",
+				buffer = true,
+			})
+
+			-- Run with input
+			map("n", "<leader>ji", function()
+				local classname = vim.fn.expand("%:t:r")
+				local dir = vim.fn.expand("%:p:h")
+				local input_file = vim.fn.input("Input file (optional): ")
+				vim.cmd("write")
+				-- Compile first
+				local compile_cmd = string.format("javac %s", vim.fn.expand("%:p"))
+				vim.fn.system(compile_cmd)
+				if vim.v.shell_error == 0 then
+					-- Then run with input
+					local run_cmd
+					if input_file ~= "" then
+						run_cmd = string.format("cd %s && java %s < %s", dir, classname, input_file)
+					else
+						run_cmd = string.format("cd %s && java %s", dir, classname)
+					end
+					vim.cmd("!" .. run_cmd)
+				else
+					vim.notify("✗ Compilation failed, cannot run", vim.log.levels.ERROR)
+				end
+			end, {
+				desc = "Compile and run Java file with input",
+				buffer = true,
+			})
+
+			-- Create main method template
+			map("n", "<leader>jm", function()
+				local lines = {
+					"public static void main(String[] args) {",
+					"\t",
+					"}",
+				}
+				vim.api.nvim_put(lines, "l", true, true)
+				vim.cmd("normal! 2j$")
+			end, {
+				desc = "Insert main method template",
+				buffer = true,
+			})
+		end,
 	})
 
 	-- Phím Escape để thoát khỏi Neo-tree và quay lại chỗ edit

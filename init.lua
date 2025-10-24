@@ -5,6 +5,11 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Prevent lspconfig's legacy jdtls loader from interfering; ftplugin handles Java
+package.preload['lspconfig.server_configurations.jdtls'] = function()
+    return {}
+end
+
 require('configurations.keymaps').setup()
 require('configurations.options').setup()
 
@@ -20,3 +25,5 @@ require("lazy").setup(require("configurations.plugins").setup(), {
         enabled = false
     }
 })
+
+-- jdtls will be started by the plugin config when editing Java files

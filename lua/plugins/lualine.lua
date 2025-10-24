@@ -1,6 +1,6 @@
 return {
-	"nvim-lualine/lualine.nvim",
-	opts = {
+    "nvim-lualine/lualine.nvim",
+    opts = {
 		options = {
 			icons_enabled = true,
 			theme = "auto",
@@ -25,14 +25,25 @@ return {
 				winbar = 1000,
 			},
 		},
-		sections = {
+        sections = {
 			lualine_a = { "mode" },
 			lualine_b = { "branch", "diff", "diagnostics" },
-			lualine_c = { {
+            lualine_c = { {
 				"filename",
 				path = 1,
 			} },
-			lualine_x = { "encoding", "fileformat", "filetype" },
+            lualine_x = {
+                "encoding",
+                "fileformat",
+                "filetype",
+                function()
+                    local ok, lsp_progress = pcall(require, "lsp-progress")
+                    if not ok then
+                        return ""
+                    end
+                    return lsp_progress.progress()
+                end,
+            },
 			lualine_y = { "progress" },
 			lualine_z = { "location" },
 		},
@@ -49,6 +60,19 @@ return {
 		},
 		tabline = {},
 		winbar = {},
-		extensions = {},
-	},
+        extensions = {},
+    },
+    config = function(_, opts)
+        require("lualine").setup(opts)
+        -- Redraw statusline when LSP progress updates
+        vim.api.nvim_create_autocmd("User", {
+            pattern = "LspProgressStatusUpdated",
+            callback = function()
+                local ok, lualine = pcall(require, "lualine")
+                if ok then
+                    lualine.refresh({ place = { "statusline" } })
+                end
+            end,
+        })
+    end,
 }

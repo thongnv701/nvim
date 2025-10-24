@@ -54,6 +54,9 @@ return {
 				json = {
 					require("formatter.filetypes.json").prettier,
 				},
+				rust = {
+					require("formatter.filetypes.rust").rustfmt,
+				},
 			},
 		})
 
@@ -62,6 +65,13 @@ return {
 			vim.cmd("Format")
 		end, {
 			desc = "Format file",
+		})
+		
+		-- Format selected code in visual mode
+		vim.keymap.set("v", "<leader>fc", function()
+			vim.cmd("'<,'>Format")
+		end, {
+			desc = "Format selected code",
 		})
 	end,
 }
