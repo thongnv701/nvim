@@ -18,6 +18,11 @@ return {
 				find_files = {
 					hidden = true,
 				},
+				live_grep = {
+					additional_args = function()
+						return { "--type-add", "wgsl:*.{wgsl,wesl}" }
+					end,
+				},
 			},
 		})
 

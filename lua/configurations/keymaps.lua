@@ -116,17 +116,17 @@ function M.setup()
 	map("n", "<leader>dy", function()
 		local diagnostics = vim.diagnostic.get(0, { 
 			lnum = vim.fn.line(".") - 1,
-			severity = vim.diagnostic.severity.ERROR
 		})
 		if #diagnostics > 0 then
 			local message = diagnostics[1].message
 			vim.fn.setreg("+", message)
+			vim.fn.setreg("0", message)  -- Also copy to yank register
 			-- Silent copy, no notification
 		else
-			vim.notify("No warning diagnostic at cursor position", vim.log.levels.WARN)
+			vim.notify("No diagnostic at cursor position", vim.log.levels.WARN)
 		end
 	end, {
-		desc = "Copy warning diagnostic message to clipboard",
+		desc = "Copy diagnostic message to clipboard",
 	})
 
 	-- Fix delete operations to not overwrite clipboard
@@ -234,89 +234,8 @@ function M.setup()
 				buffer = true,
 			})
 
-			-- Comment toggle with Ctrl+/ for Rust
-			local function toggle_rust_comment()
-				local line = vim.api.nvim_get_current_line()
-				local cursor_pos = vim.api.nvim_win_get_cursor(0)
-
-				if line:match("^%s*//") then
-					-- Uncomment: remove first occurrence of //
-					local new_line = line:gsub("^(%s*)// ?", "%1")
-					vim.api.nvim_set_current_line(new_line)
-				else
-					-- Comment: add // at the beginning (preserving indentation)
-					local indent = line:match("^(%s*)")
-					local content = line:gsub("^%s*", "")
-					local new_line = indent .. "// " .. content
-					vim.api.nvim_set_current_line(new_line)
-				end
-
-				-- Restore cursor position
-				vim.api.nvim_win_set_cursor(0, cursor_pos)
-			end
-
-			local function toggle_rust_comment_visual()
-				local start_line = vim.fn.line("'<")
-				local end_line = vim.fn.line("'>")
-
-				-- Check if all lines are commented
-				local all_commented = true
-				for i = start_line, end_line do
-					local line = vim.fn.getline(i)
-					if not line:match("^%s*//") and line:match("%S") then
-						all_commented = false
-						break
-					end
-				end
-
-				-- Toggle comments for selected lines
-				for i = start_line, end_line do
-					local line = vim.fn.getline(i)
-					if all_commented then
-						-- Uncomment
-						local new_line = line:gsub("^(%s*)// ?", "%1")
-						vim.fn.setline(i, new_line)
-					else
-						-- Comment (only if line has content)
-						if line:match("%S") then
-							local indent = line:match("^(%s*)")
-							local content = line:gsub("^%s*", "")
-							local new_line = indent .. "// " .. content
-							vim.fn.setline(i, new_line)
-						end
-					end
-				end
-			end
-
-			-- Ctrl+/ in normal mode - toggle comment on current line
-			map("n", "<C-/>", toggle_rust_comment, {
-				desc = "Toggle Rust comment on current line",
-				buffer = true,
-			})
-
-			-- Ctrl+/ in visual mode - toggle comment on selected lines
-			map("v", "<C-/>", function()
-				toggle_rust_comment_visual()
-				-- Clear selection and return to normal mode
-				vim.cmd("normal! ")
-			end, {
-				desc = "Toggle Rust comment on selected lines",
-				buffer = true,
-			})
-
-			-- Alternative mapping for terminals that don't support Ctrl+/
-			map("n", "<leader>/", toggle_rust_comment, {
-				desc = "Toggle Rust comment on current line (alternative)",
-				buffer = true,
-			})
-
-			map("v", "<leader>/", function()
-				toggle_rust_comment_visual()
-				vim.cmd("normal! ")
-			end, {
-				desc = "Toggle Rust comment on selected lines (alternative)",
-				buffer = true,
-			})
+			-- Note: Comment toggle (Ctrl+/ and <leader>/) is now handled by Comment.nvim plugin
+			-- which works for all languages (Rust, C#, Python, Lua, etc.)
 		end,
 	})
 
